@@ -25,6 +25,9 @@ alpha-8 project, including its Gradle wrapper, vendor dependencies, and simulato
 - Elastic is optional for console lessons. For the field/wheel display, download the Windows
   application from [Elastic 2026.1.2](https://github.com/Gold872/elastic_dashboard/releases/tag/v2026.1.2),
   extract it if packaged as a ZIP, and open the executable.
+- The Windows simulator also needs the
+  [Microsoft Visual C++ Redistributable (x64)](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
+  Install it if it is not already present; school computers may need IT assistance.
 
 Open a new PowerShell terminal and configure Java for that terminal. Enter the **JDK folder**
 when prompted, not its `bin` folder:
@@ -130,12 +133,21 @@ Do not connect or enable real hardware for this curriculum.
 | Missing Java lesson | Check the exact name `workshops\WorkshopNN.java`, including no `.txt` suffix. |
 | `edu.wpi.first` imports / missing alpha-8 classes | Use the fork's `prepare/2027` branch, not a 2026 project. |
 | Dependency download errors | Check internet access and school proxy/firewall policy; retry after correcting connectivity. |
+| Simulator JNI / missing DLL error | Install the x64 Visual C++ Redistributable linked above, then retry the simulator. |
 | Console succeeds but Elastic is still | Console programs do not drive it; run the separate simulator command. |
 | Elastic connected but blank | Open `elastic-swerve-sim.json` with Ctrl+O. |
 | Field visible but no motion | Choose Auto demo and enable Teleoperated in the simulation GUI. |
 
 If those steps do not resolve it, save the command and its first error message for a teacher.
 Do not fix setup errors by changing vendor versions, CAN IDs, or random motor settings.
+
+**Verified student path:** on November 1, 2026, a fresh clone of this fork at `51b0185`
+was checked with the examples downloaded from the published Gists. The full build, all eleven
+native simulator tests, and all ten console examples passed on Windows x64 / Java 25.
+The documented simulator command also started successfully from that clone and accepted an
+Elastic connection on localhost port 5810; it was stopped after the check.
+An existing dependency cache was used; this does not verify your school's download permissions,
+other operating systems, or real hardware.
 
 ## Students: apply for GitHub Education benefits
 
