@@ -4,7 +4,7 @@
 		{
 			"label": "Swerve simulation for Elastic",
 			"type": "shell",
-			"command": "$localJdk = Get-ChildItem \"$env:LOCALAPPDATA\\RobotCodeTools\" -Directory -Filter 'jdk-25*' -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1; if (-not $localJdk) { throw 'Java 25 not found in %LOCALAPPDATA%\\RobotCodeTools. Install the project Java 25 toolchain before launching the simulator.' }; $env:JAVA_HOME = $localJdk.FullName; & .\\gradlew.bat run -PswerveSim --no-daemon --console=plain; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+			"command": "if (-not $env:JAVA_HOME) { $localJdk = Get-ChildItem \"$env:LOCALAPPDATA\\RobotCodeTools\" -Directory -Filter 'jdk-25*' -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1; if ($localJdk) { $env:JAVA_HOME = $localJdk.FullName } }; if (-not $env:JAVA_HOME -or -not (Test-Path \"$env:JAVA_HOME\\bin\\javac.exe\")) { throw 'Configure JAVA_HOME to your Java 25 JDK folder. See README student setup.' }; & .\\gradlew.bat run -PswerveSim --no-daemon --console=plain; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
 			"problemMatcher": [],
 			"presentation": {
 				"reveal": "always",
@@ -14,7 +14,7 @@
 		{
 			"label": "Simulate TalonFX swerve (terminal)",
 			"type": "shell",
-			"command": "$localJdk = Get-ChildItem \"$env:LOCALAPPDATA\\RobotCodeTools\" -Directory -Filter 'jdk-25*' -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1; if (-not $localJdk) { throw 'Java 25 not found in %LOCALAPPDATA%\\RobotCodeTools. Install the project Java 25 toolchain before running tests.' }; $env:JAVA_HOME = $localJdk.FullName; & .\\gradlew.bat test --tests frc.robot.subsystems.SimTalonFXDrivetrainTest --no-daemon --console=plain; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+			"command": "if (-not $env:JAVA_HOME) { $localJdk = Get-ChildItem \"$env:LOCALAPPDATA\\RobotCodeTools\" -Directory -Filter 'jdk-25*' -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1; if ($localJdk) { $env:JAVA_HOME = $localJdk.FullName } }; if (-not $env:JAVA_HOME -or -not (Test-Path \"$env:JAVA_HOME\\bin\\javac.exe\")) { throw 'Configure JAVA_HOME to your Java 25 JDK folder. See README student setup.' }; & .\\gradlew.bat test --tests frc.robot.subsystems.SimTalonFXDrivetrainTest --no-daemon --console=plain; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "test"

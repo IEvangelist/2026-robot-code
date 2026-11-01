@@ -6,6 +6,137 @@ This project connects Java code to real motors, sensors, and cameras for **FIRST
 You do not need to understand every file to get started. **First goal: make the robot move safely.**
 Follow the joystick input from the driver's hand to the wheels, then explore shooting.
 
+## Student setup: start here
+
+**Use one project for all ten weeks:** the
+[training fork's `prepare/2027` branch](https://github.com/IEvangelist/2026-robot-code/tree/prepare/2027).
+You do **not** need to create a new WPILib project each week or use different robot code.
+Do not clone the team's default branch for these lessons: the examples require the upgraded
+alpha-8 project, including its Gradle wrapper, vendor dependencies, and simulator.
+
+### 1. Install tools once (Windows x64)
+
+- Install [Git for Windows](https://git-scm.com/downloads/win) and [VS Code](https://code.visualstudio.com/).
+- Install a **Java 25 JDK**, not a JRE or Java 17. For example, select version 25, Windows, x64,
+  and JDK on the [Temurin download page](https://adoptium.net/temurin/releases/?version=25).
+  Remember its installation folder. School-managed computers may require an IT administrator.
+- A separate Gradle installation is **not** required; use the project's `gradlew.bat`.
+  Internet access is needed for the first dependency download.
+- Elastic is optional for console lessons. For the field/wheel display, download the Windows
+  application from [Elastic 2026.1.2](https://github.com/Gold872/elastic_dashboard/releases/tag/v2026.1.2),
+  extract it if packaged as a ZIP, and open the executable.
+
+Open a new PowerShell terminal and configure Java for that terminal. Enter the **JDK folder**
+when prompted, not its `bin` folder:
+
+```powershell
+$env:JAVA_HOME = (Read-Host 'Paste your Java 25 JDK installation folder').Trim('"')
+if (-not (Test-Path "$env:JAVA_HOME\bin\javac.exe")) {
+    throw 'That folder is not a JDK. Find the Java 25 folder containing bin\javac.exe.'
+}
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+java -version
+javac -version
+```
+
+Both version commands must report **25**. These commands affect this terminal only.
+To save the setting for future terminals, add `JAVA_HOME` with that folder in Windows
+**Edit environment variables for your account**, then restart VS Code.
+You do not need to install WPILib IDE extensions to run these terminal exercises.
+
+### 2. Get the correct project
+
+In PowerShell, from a folder where you keep projects:
+
+```powershell
+git clone --branch prepare/2027 --single-branch https://github.com/IEvangelist/2026-robot-code.git
+Set-Location .\2026-robot-code
+.\gradlew.bat --version
+```
+
+Check **Gradle 9.4.1** and **JVM 25**. The first run can take time downloading dependencies.
+Run `git branch --show-current`: it must say `prepare/2027`.
+Open this folder in VS Code using **File > Open Folder**.
+If you already have a different checkout, clone into a new named folder instead of overwriting it.
+
+Without Git, use the training branch link above and **Code > Download ZIP**, extract it,
+then open a terminal in the extracted folder containing `build.gradle` and `gradlew.bat`.
+Do not download the default branch ZIP.
+
+### 3. Run a weekly console example
+
+Open a weekly Gist from the table below. Download its `WorkshopNN.java` using **Raw**
+and save it into a new `workshops` folder in the project root. Download `run-workshop.gradle`
+into the project root; the helper is identical in every weekly Gist.
+Check file extensions: neither file should end in `.txt`.
+
+```text
+2026-robot-code
+  build.gradle
+  gradlew.bat
+  run-workshop.gradle
+  workshops
+    Workshop01.java
+```
+
+From that root folder, run:
+
+```powershell
+.\gradlew.bat -I .\run-workshop.gradle runWorkshop -Pworkshop=Workshop01
+```
+
+For Week 02 download `Workshop02.java` into the same folder and use `-Pworkshop=Workshop02`,
+and so on through `Workshop10`. **Do not paste Markdown excerpts into the source files**:
+the downloadable Java companions are complete programs; excerpts are explanations.
+
+These commands print results in the terminal. They do not open Elastic or move its robot.
+Week 01 prints about `+0.913 m/s` for stick `-0.50` and finishes with `BUILD SUCCESSFUL`.
+Other weeks print tables or `PASS` messages. An assertion/build error is a failed check, not success.
+
+### 4. Run the existing driving simulation (a separate command)
+
+```powershell
+.\gradlew.bat run -PswerveSim
+```
+
+In Elastic choose **localhost**, then **Ctrl+O** and open this project's `elastic-swerve-sim.json`.
+Choose **Auto demo** in the mode dropdown. In the WPILib simulation GUI select
+**Teleoperated**. Watch the status, wheel speeds, and field position.
+For controller mode, assign the Xbox device to **Joystick[0]** in that GUI.
+Choose Stopped or disable to stop requests; close the GUI to end the simulation.
+Do not run two simulations at the same time.
+
+**Never use `deploy`, and do not run bare `gradlew run` for a lesson.**
+Bare `run` starts the full competition robot rather than the standalone exercise.
+Do not connect or enable real hardware for this curriculum.
+
+### What works now, and what is a future exercise?
+
+| Capability | Available now? | What students run |
+|---|---|---|
+| Ten complete console examples | Yes; calculations, graphs-as-tables, and synthetic checks. | `runWorkshop` with the downloaded week's number. |
+| Virtual swerve driving, auto demo, and controller | Yes; separate simulator and Elastic layout. | `run -PswerveSim`. |
+| Week 03 command factory | Compiles, but its console entry point does not schedule it. | Run the console model independently; live command integration is a supervised stretch task. |
+| Lift/placement/projectile examples | Math, references, geometry, and synthetic data only. | Weeks 06-10 console programs; no lift or flying object appears in Elastic. |
+| Integrated lift/placement autonomous mission | Not supplied as a finished subsystem or command harness. | Optional design/implementation work, not a prerequisite for the supplied examples. |
+| Real robot hardware | Not validated or ready to enable. | Do not deploy these lessons. |
+
+### If something fails
+
+| Symptom | Next step |
+|---|---|
+| `gradlew.bat` not found | Open a terminal in the project root, not `workshops` or the ZIP's outer folder. |
+| Wrong Java / unsupported class version | Repeat the Java setup; check `JAVA_HOME`, `java -version`, and Gradle JVM version. |
+| Missing Java lesson | Check the exact name `workshops\WorkshopNN.java`, including no `.txt` suffix. |
+| `edu.wpi.first` imports / missing alpha-8 classes | Use the fork's `prepare/2027` branch, not a 2026 project. |
+| Dependency download errors | Check internet access and school proxy/firewall policy; retry after correcting connectivity. |
+| Console succeeds but Elastic is still | Console programs do not drive it; run the separate simulator command. |
+| Elastic connected but blank | Open `elastic-swerve-sim.json` with Ctrl+O. |
+| Field visible but no motion | Choose Auto demo and enable Teleoperated in the simulation GUI. |
+
+If those steps do not resolve it, save the command and its first error message for a teacher.
+Do not fix setup errors by changing vendor versions, CAN IDs, or random motor settings.
+
 ## Students: apply for GitHub Education benefits
 
 GitHub Education provides eligible students with free access to developer tools and learning
@@ -274,9 +405,9 @@ Good next projects: graph joystick input versus requested speed, explore drive s
 
 ## 2027 migration and hardware readiness
 
-The local `prepare/2027` work targets **WPILib 2027.0.0-alpha-8**, Java 25,
-and SystemCore deployment. Local changes are not automatically available in the public repository
-until committed and pushed. Have a mentor supply the matching project for the weekly lessons.
+The [training fork's `prepare/2027` branch](https://github.com/IEvangelist/2026-robot-code/tree/prepare/2027)
+targets **WPILib 2027.0.0-alpha-8**, Java 25, and SystemCore deployment.
+Use that branch for the weekly lessons; the upstream default branch is a different software baseline.
 
 The migration uses `org.wpilib` packages, renamed kinematics APIs, Telemetry/Tunables/Selectable,
 and compatible command framework v2 dependencies. Keeping v2 avoids an unrelated rewrite to commands v3.
