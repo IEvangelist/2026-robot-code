@@ -14,26 +14,35 @@ You do **not** need to create a new WPILib project each week or use different ro
 Do not clone the team's default branch for these lessons: the examples require the upgraded
 alpha-8 project, including its Gradle wrapper, vendor dependencies, and simulator.
 
-### 1. Install tools once (Windows x64)
+### 1. Install WPILib using its documented workflow (Windows 11 x64)
 
-- Install [Git for Windows](https://git-scm.com/downloads/win) and [VS Code](https://code.visualstudio.com/).
-- Install a **Java 25 JDK**, not a JRE or Java 17. For example, select version 25, Windows, x64,
-  and JDK on the [Temurin download page](https://adoptium.net/temurin/releases/?version=25).
-  Remember its installation folder. School-managed computers may require an IT administrator.
-- A separate Gradle installation is **not** required; use the project's `gradlew.bat`.
-  Internet access is needed for the first dependency download.
-- Elastic is optional for console lessons. For the field/wheel display, download the Windows
-  application from [Elastic 2026.1.2](https://github.com/Gold872/elastic_dashboard/releases/tag/v2026.1.2),
-  extract it if packaged as a ZIP, and open the executable.
-- The Windows simulator also needs the
-  [Microsoft Visual C++ Redistributable (x64)](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
-  Install it if it is not already present; school computers may need IT assistance.
+The original team repository uses the WPILib/GradleRIO project structure but has no separate
+setup guide. Follow the [official WPILib installation guide](https://docs.wpilib.org/en/latest/docs/zero-to-robot/step-2/wpilib-setup.html)
+and the [alpha-8 release instructions](https://github.com/wpilibsuite/allwpilib/releases/tag/v2027.0.0-alpha-8)
+as the source of truth. This section adds only the version and commands needed for our lessons.
 
-Open a new PowerShell terminal and configure Java for that terminal. Enter the **JDK folder**
-when prompted, not its `bin` folder:
+1. Download the **2027.0.0-alpha-8** installer from that release, not a different version offered
+   by a moving latest/stable documentation page. Alpha-8 requires Windows 11 for this Windows path.
+2. Follow the installation guide to mount/open the installer and select **Everything**.
+   This installs the WPILib tools, JDK, and development environment together; do not assemble a
+   separate Temurin/general-purpose VS Code installation as a substitute.
+3. Follow the installer's VS Code download steps, then open the **WPILib-installed VS Code**.
+   Use the official guide's current-user/all-users options according to school IT policy.
+4. Use the **JDK supplied by that WPILib installation** for these Java 25 examples.
+   A separate Gradle installation is not required; this project supplies its wrapper.
+5. Install [Git for Windows](https://git-scm.com/downloads/win) if needed for the clone command below.
+   School-managed computers may require IT assistance and download/proxy configuration.
+
+This training branch is already migrated. Students should **open it**, not re-import it.
+For a separate older robot project, follow the release's official project-import and vendor-update
+instructions instead of merely changing the Gradle plugin version.
+
+In the WPILib VS Code PowerShell terminal, check `.\gradlew.bat --version` after opening the
+project in Step 2. If Java is not found or Gradle reports a JVM other than 25, select the JDK
+from your WPILib installation for this terminal. Enter that JDK folder, not its `bin` folder:
 
 ```powershell
-$env:JAVA_HOME = (Read-Host 'Paste your Java 25 JDK installation folder').Trim('"')
+$env:JAVA_HOME = (Read-Host 'Paste the JDK folder supplied by your WPILib alpha-8 installation').Trim('"')
 if (-not (Test-Path "$env:JAVA_HOME\bin\javac.exe")) {
     throw 'That folder is not a JDK. Find the Java 25 folder containing bin\javac.exe.'
 }
@@ -42,10 +51,16 @@ java -version
 javac -version
 ```
 
-Both version commands must report **25**. These commands affect this terminal only.
-To save the setting for future terminals, add `JAVA_HOME` with that folder in Windows
-**Edit environment variables for your account**, then restart VS Code.
-You do not need to install WPILib IDE extensions to run these terminal exercises.
+Both version commands must report **25**. This is a terminal configuration step, not a second
+Java installation. It affects this terminal only; do not change global Java settings needed by
+other projects. Use the same terminal for the lesson commands below.
+
+Elastic is optional for console lessons. The field/wheel exercise was validated with
+[Elastic 2026.1.2](https://github.com/Gold872/elastic_dashboard/releases/tag/v2026.1.2);
+that version is a dashboard compatibility choice, not a replacement for the WPILib toolchain.
+For a Windows simulator JNI/missing-DLL error, follow its diagnostic and install the
+[Microsoft Visual C++ Redistributable (x64)](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+if required.
 
 ### 2. Get the correct project
 
@@ -59,7 +74,7 @@ Set-Location .\2026-robot-code
 
 Check **Gradle 9.4.1** and **JVM 25**. The first run can take time downloading dependencies.
 Run `git branch --show-current`: it must say `prepare/2027`.
-Open this folder in VS Code using **File > Open Folder**.
+Open this folder in the WPILib-installed VS Code using **File > Open Folder**.
 If you already have a different checkout, clone into a new named folder instead of overwriting it.
 
 Without Git, use the training branch link above and **Code > Download ZIP**, extract it,
@@ -398,8 +413,8 @@ From PowerShell in the repository folder:
 This compiles, runs the available tests, and packages the code; it does **not** deploy it to the robot.
 
 Check `java -version` and `.\gradlew.bat --version` when troubleshooting version mismatches.
-The local VS Code tasks can find Java 25 installed under `%LOCALAPPDATA%\RobotCodeTools`.
-Otherwise, configure `JAVA_HOME` to a Java 25 installation.
+Use the JDK supplied by the matching WPILib installation; see the student setup section
+for terminal configuration if Gradle cannot find it.
 The lesson Gists include a separate Gradle init-script helper for running their console examples;
 they do not alter the production build or deploy code.
 
