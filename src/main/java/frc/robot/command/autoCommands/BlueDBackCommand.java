@@ -4,10 +4,10 @@
 
 package frc.robot.command.autoCommands;
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.ParallelDeadlineGroup;
+import org.wpilib.command2.SequentialCommandGroup;
+import org.wpilib.command2.WaitCommand;
 import frc.robot.Constants.IntakePositions;
 import frc.robot.Constants.TrajectoryConstants;
 import frc.robot.command.TargetCommand;
@@ -18,22 +18,24 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TransitionSubsystem;
 
-// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
-// information, see:
-// https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+/** Blue depot-side route: score, collect in the neutral zone, and return for more shots. */
 public class BlueDBackCommand extends SequentialCommandGroup {
-  /** Creates a new BlueDBackCommand. */
   private CommandSwerveDrivetrain driveSubsystem;
   private IntakeSubsystem intakeSubsystem;
   private TransitionSubsystem transitionSubsystem;
   private ShooterSubsystem shooterSubsystem;
   private ClimbSubsystem climbSubsystem;
 
-  public BlueDBackCommand(IntakeSubsystem intake, ClimbSubsystem climb, CommandSwerveDrivetrain drive,
-      ShooterSubsystem shooter, TransitionSubsystem transition) {
+  public BlueDBackCommand(
+      IntakeSubsystem intake,
+      ClimbSubsystem climb,
+      CommandSwerveDrivetrain drive,
+      ShooterSubsystem shooter,
+      TransitionSubsystem transition) {
 
     addCommands(
         drive.profiledAutonAlignCommand(() -> TrajectoryConstants.BLUE_DEPOT_SCORE),
+        // The wait is the deadline: its completion interrupts targeting and stops shooting.
         new ParallelDeadlineGroup(
             new WaitCommand(3),
             new TargetCommand(intake, transition, shooter, () -> drive.getState())),
@@ -51,6 +53,7 @@ public class BlueDBackCommand extends SequentialCommandGroup {
         drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RO_FAR_EDGE),
         drive.profiledAutonAlignCommand(() -> TrajectoryConstants.NEUTRAL_BD_EDGE),
         drive.profiledAutonAlignCommand(() -> TrajectoryConstants.BLUE_DEPOT_SCORE),
+        // The final targeting command runs until autonomous is cancelled.
         new TargetCommand(intake, transition, shooter, () -> drive.getState()));
   }
 }

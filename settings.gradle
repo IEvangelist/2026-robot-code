@@ -4,7 +4,8 @@ pluginManagement {
     repositories {
         mavenLocal()
         gradlePluginPortal()
-        String frcYear = '2026'
+        // Also resolve plugins from the season-specific local WPILib Maven repository.
+        String frcYear = '2027_alpha7'
         File frcHome
         if (OperatingSystem.current().isWindows()) {
             String publicFolder = System.getenv('PUBLIC')
@@ -27,4 +28,5 @@ pluginManagement {
 }
 
 Properties props = System.getProperties();
+// Allow GradleRIO native dependency resolution without discovering every system header.
 props.setProperty("org.gradle.internal.native.headers.unresolved.dependencies.ignore", "true");

@@ -4,9 +4,9 @@
 
 package frc.robot.command.autoCommands;
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.SequentialCommandGroup;
+import org.wpilib.command2.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.IntakePositions;
 import frc.robot.Constants.TrajectoryConstants;
@@ -19,23 +19,24 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TransitionSubsystem;
 
-// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
-// information, see:
-// https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+/** Red preload routine: target and shoot from the starting pose without driving. */
 public class RedPreCommand extends SequentialCommandGroup {
-  /** Creates a new RedPreCommand. */
- private CommandSwerveDrivetrain driveSubsystem;
+  private CommandSwerveDrivetrain driveSubsystem;
   private IntakeSubsystem intakeSubsystem;
   private TransitionSubsystem transitionSubsystem;
   private ShooterSubsystem shooterSubsystem;
   private ClimbSubsystem climbSubsystem;
 
-  public RedPreCommand(IntakeSubsystem intake, ClimbSubsystem climb, CommandSwerveDrivetrain drive,
-  ShooterSubsystem shooter, TransitionSubsystem transition) {
+  public RedPreCommand(
+      IntakeSubsystem intake,
+      ClimbSubsystem climb,
+      CommandSwerveDrivetrain drive,
+      ShooterSubsystem shooter,
+      TransitionSubsystem transition) {
 
     addCommands(
-        //drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RED_PRE_SCORE),
-        new TargetCommand(intake, transition, shooter, () -> drive.getState())
-    );
+        // drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RED_PRE_SCORE),
+        // TargetCommand is continuous; the robot mode transition ends this routine.
+        new TargetCommand(intake, transition, shooter, () -> drive.getState()));
   }
 }

@@ -1,0 +1,93 @@
+{
+  "version": 1.0,
+  "grid_size": 64,
+  "tabs": [
+    {
+      "name": "Swerve Simulation",
+      "grid_layout": {
+        "layouts": [],
+        "containers": [
+          {
+            "title": "Simulated Field",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 768.0,
+            "height": 384.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/Swerve Sim/Field",
+              "period": 0.033,
+              "field_game": "Rebuilt",
+              "robot_width": 0.6,
+              "robot_length": 0.6
+            }
+          },
+          {
+            "title": "Wheel Angles and Speeds",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 320.0,
+            "height": 384.0,
+            "type": "SwerveDrive",
+            "properties": {
+              "topic": "/SmartDashboard/Swerve Sim/Modules",
+              "period": 0.033,
+              "show_robot_rotation": true,
+              "rotation_unit": "Radians"
+            }
+          },
+          {
+            "title": "Control Mode",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 320.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/RobotControls/Swerve Sim/Control Mode",
+              "period": 0.033,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "Status",
+            "x": 320.0,
+            "y": 384.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Swerve Sim/Status",
+              "period": 0.033,
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Simulation Enabled",
+            "x": 704.0,
+            "y": 384.0,
+            "width": 192.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Swerve Sim/Enabled",
+              "period": 0.033
+            }
+          },
+          {
+            "title": "Controller Connected",
+            "x": 896.0,
+            "y": 384.0,
+            "width": 192.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Swerve Sim/Controller Connected",
+              "period": 0.033
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

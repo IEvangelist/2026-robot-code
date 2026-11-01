@@ -6,10 +6,10 @@ package frc.robot.command.autoCommands;
 
 import java.io.Console;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.SequentialCommandGroup;
+import org.wpilib.command2.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.IntakePositions;
 import frc.robot.Constants.TrajectoryConstants;
@@ -22,21 +22,24 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TransitionSubsystem;
 
-/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
+/** Blue preload routine: target and shoot from the starting pose without driving. */
 public class BluePreCommand extends SequentialCommandGroup {
-  /** Creates a new RedPreload. */
   private CommandSwerveDrivetrain driveSubsystem;
   private IntakeSubsystem intakeSubsystem;
   private TransitionSubsystem transitionSubsystem;
   private ShooterSubsystem shooterSubsystem;
   private ClimbSubsystem climbSubsystem;
 
-  public BluePreCommand(IntakeSubsystem intake, ClimbSubsystem climb, CommandSwerveDrivetrain drive,
-  ShooterSubsystem shooter, TransitionSubsystem transition) {
+  public BluePreCommand(
+      IntakeSubsystem intake,
+      ClimbSubsystem climb,
+      CommandSwerveDrivetrain drive,
+      ShooterSubsystem shooter,
+      TransitionSubsystem transition) {
 
     addCommands(
-        //drive.profiledAutonAlignCommand(() -> TrajectoryConstants.BLUE_PRE_SCORE),
-        new TargetCommand(intake, transition, shooter, () -> drive.getState())
-    );
+        // drive.profiledAutonAlignCommand(() -> TrajectoryConstants.BLUE_PRE_SCORE),
+        // TargetCommand is continuous; the robot mode transition ends this routine.
+        new TargetCommand(intake, transition, shooter, () -> drive.getState()));
   }
 }

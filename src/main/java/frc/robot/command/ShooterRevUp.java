@@ -4,41 +4,44 @@
 
 package frc.robot.command;
 
-import edu.wpi.first.wpilibj2.command.Command;
+import org.wpilib.command2.Command;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TransitionSubsystem;
 
-/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
+/**
+ * Spins the flywheel to the requested RPM, leaving its closed-loop request active on completion.
+ */
 public class ShooterRevUp extends Command {
 
   ShooterSubsystem shooterSubsystem;
   TransitionSubsystem transitionSubsystem;
   double targetRPM;
+
   /** Creates a new ShooterRevUp. */
-  public ShooterRevUp(ShooterSubsystem shooterSubsystem, TransitionSubsystem transitionSubsystem, double targetRPM) {
+  public ShooterRevUp(
+      ShooterSubsystem shooterSubsystem,
+      TransitionSubsystem transitionSubsystem,
+      double targetRPM) {
     this.shooterSubsystem = shooterSubsystem;
     this.transitionSubsystem = transitionSubsystem;
 
     this.targetRPM = targetRPM;
-    // Use addRequirements() here to declare subsystem dependencies.
+    // Reserve the feed mechanism as well so other requiring commands cannot feed during spin-up.
     addRequirements(shooterSubsystem, transitionSubsystem);
   }
 
-  // Called when the command is initially scheduled.
   @Override
   public void initialize() {}
 
-  // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     shooterSubsystem.setRPM(targetRPM);
   }
 
-  // Called once the command ends or is interrupted.
+  // Intentionally keep the flywheel request active for the following command.
   @Override
   public void end(boolean interrupted) {}
 
-  // Returns true when the command should end.
   @Override
   public boolean isFinished() {
     return shooterSubsystem.withinErrorRPM(targetRPM);

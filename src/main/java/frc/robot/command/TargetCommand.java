@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
-import edu.wpi.first.wpilibj2.command.Command;
+import org.wpilib.command2.Command;
 import frc.robot.Constants;
 import frc.robot.Constants.TransitionConstants;
 import frc.robot.Zones;
@@ -16,7 +16,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TransitionSubsystem;
 
-/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
+/** Continuously aims at the alliance hub and feeds until cancelled or timed out by its caller. */
 public class TargetCommand extends Command {
 
   ShooterSubsystem shooterSubsystem;
@@ -28,7 +28,8 @@ public class TargetCommand extends Command {
   public TargetCommand(
       IntakeSubsystem intakeSubsystem,
       TransitionSubsystem transitionSubsystem,
-      ShooterSubsystem shooterSubsystem, Supplier<SwerveDriveState> currentState) {
+      ShooterSubsystem shooterSubsystem,
+      Supplier<SwerveDriveState> currentState) {
 
     this.shooterSubsystem = shooterSubsystem;
     this.intakeSubsystem = intakeSubsystem;
@@ -36,33 +37,28 @@ public class TargetCommand extends Command {
     this.currentState = currentState;
   }
 
-  // Called when the command is initially scheduled.
   @Override
-  public void initialize() {
-  }
+  public void initialize() {}
 
-  // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
     System.out.println("targeting :)");
-    shooterSubsystem.updateSOTM(currentState.get().Pose, currentState.get().Speeds);
+    shooterSubsystem.updateSOTM(currentState.get().Pose, currentState.get().Velocity);
+    // Feed runs alongside aiming; there is no RPM or turret-readiness gate here.
     transitionSubsystem.shooterTransition(
-        TransitionConstants.TRANSITION_SHOOTER_SPEED,
-        TransitionConstants.TRANSITION_HOPPER_SPEED);
-
+        TransitionConstants.TRANSITION_SHOOTER_SPEED, TransitionConstants.TRANSITION_HOPPER_SPEED);
   }
 
-  // Called once the command ends or is interrupted.
+  // Autonomous deadlines and driver release both stop the feed, flywheel, and turret.
   @Override
   public void end(boolean interrupted) {
-    transitionSubsystem.shooterTransition(
-        0.0, 0.0);
+    transitionSubsystem.shooterTransition(0.0, 0.0);
     shooterSubsystem.stopShooter();
     shooterSubsystem.stopShooterTurn();
   }
 
-  // Returns true when the command should end.
+  // The driver binding or containing command controls this command's duration.
   @Override
   public boolean isFinished() {
     return false;

@@ -4,32 +4,35 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import org.wpilib.math.interpolation.InterpolatingDoubleTreeMap;
+import org.wpilib.math.interpolation.InterpolatingTreeMap;
 
-/** Add your docs here. */
+/** Distance-to-flywheel-RPM samples for fixed-hood shooting. */
 public class SOTMTable {
-    private static final InterpolatingDoubleTreeMap velocityMapRPM =
-        new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap velocityMapRPM = new InterpolatingDoubleTreeMap();
 
-    static {
-        // key = Distance (m); value = Velocity (RPM)
-        velocityMapRPM.put(Inches.of(55).in(Meters), 2600.0);
-        velocityMapRPM.put(Inches.of(76).in(Meters), 2806.0);
-        velocityMapRPM.put(Inches.of(91).in(Meters), 3243.0);
-        velocityMapRPM.put(Inches.of(104).in(Meters), 3404.0);
-        velocityMapRPM.put(Inches.of(132).in(Meters), 3856.0);
-        velocityMapRPM.put(Inches.of(160).in(Meters), 4308.0);
-        velocityMapRPM.put(Inches.of(180).in(Meters), 4337.0);
-        velocityMapRPM.put(Inches.of(207).in(Meters), 4621.0);
-    }
-    /**
-     * This method assumes constant angle, only use when Shooting, never when Passing
-     * @param distanceFromGoal the distance from the goal target
-     */
-    public static double getSpeed(double distanceFromGoal) {
-        return velocityMapRPM.get(distanceFromGoal);
-    }
+  static {
+    // key = Distance (m); value = Velocity (RPM)
+    velocityMapRPM.put(Inches.of(55).in(Meters), 2600.0);
+    velocityMapRPM.put(Inches.of(76).in(Meters), 2806.0);
+    velocityMapRPM.put(Inches.of(91).in(Meters), 3243.0);
+    velocityMapRPM.put(Inches.of(104).in(Meters), 3404.0);
+    velocityMapRPM.put(Inches.of(132).in(Meters), 3856.0);
+    velocityMapRPM.put(Inches.of(160).in(Meters), 4308.0);
+    velocityMapRPM.put(Inches.of(180).in(Meters), 4337.0);
+    velocityMapRPM.put(Inches.of(207).in(Meters), 4621.0);
+  }
+
+  /**
+   * Interpolates between samples and uses the nearest endpoint outside the sampled range. Assumes
+   * the shooting hood angle remains fixed.
+   *
+   * @param distanceFromGoal distance to the target in meters
+   * @return flywheel speed in RPM
+   */
+  public static double getSpeed(double distanceFromGoal) {
+    return velocityMapRPM.get(distanceFromGoal);
+  }
 }

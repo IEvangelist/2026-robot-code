@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static org.wpilib.units.Units.*;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -21,40 +21,39 @@ import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.BooleanPublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.measure.*;
-import edu.wpi.first.util.sendable.Sendable;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.util.sendable.SendableRegistry;
-import edu.wpi.first.util.struct.Struct;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.wpilib.fields.Field;
+import org.wpilib.fields.Fields;
+import org.wpilib.math.linalg.Matrix;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Rotation3d;
+import org.wpilib.math.geometry.Transform2d;
+import org.wpilib.math.geometry.Transform3d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.geometry.Translation3d;
+import org.wpilib.math.numbers.N1;
+import org.wpilib.math.numbers.N3;
+import org.wpilib.math.util.Units;
+import org.wpilib.networktables.BooleanPublisher;
+import org.wpilib.networktables.NetworkTable;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.networktables.StructArrayPublisher;
+import org.wpilib.networktables.StructPublisher;
+import org.wpilib.units.measure.*;
+import org.wpilib.telemetry.TelemetryLoggable;
+import org.wpilib.telemetry.TelemetryTable;
+import org.wpilib.util.struct.Struct;
+import org.wpilib.system.DataLogManager;
+import org.wpilib.driverstation.DriverStation;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.smartdashboard.Field2d;
+import frc.robot.Dashboard;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
-/** Add your docs here. */
-public class WarriorCamera implements Sendable {
+/** Wraps a PhotonVision camera with pose estimation, acceptance checks, and diagnostics. */
+public class WarriorCamera implements TelemetryLoggable {
 
   private final PhotonCamera camera;
   private Pose2d cameraPose2d = new Pose2d();
@@ -65,18 +64,18 @@ public class WarriorCamera implements Sendable {
   private Matrix<N3, N1> standardDeviation;
   private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
-  //Simulation
+  // Simulation
   private PhotonCameraSim cameraSim;
   private final SimCameraProperties simProp = new SimCameraProperties();
 
-  public final static class CameraConstants {
+  public static final class CameraConstants {
     // side cam single mount
     // X: 11.868in
     // Y: 10.2795in
     // Z: 6.543in
     // Theta:
 
-    //forward facing
+    // forward facing
     // X: 13.486in
     // Y: 9.374in
     // Z: 6.543in
@@ -89,63 +88,68 @@ public class WarriorCamera implements Sendable {
     // -.24, -.27, .10
 
     /*The amount each camera is off from the center of the robot */
-    public final static Transform3d BACK_CAM_OFFSET = new Transform3d(new Translation3d(-.3425, .267, .19), // 1
-        new Rotation3d(Units.degreesToRadians(0.5), Units.degreesToRadians(-24.5),
-            Units.degreesToRadians(180)));
-    public final static Transform3d LEFT_CAM_OFFSET = new Transform3d(new Translation3d(-.244, .2678, 0.022), // 2
-        new Rotation3d(Units.degreesToRadians(-0.6), Units.degreesToRadians(-25.2),
-            Units.degreesToRadians(91.0)));
-    public final static Transform3d RIGHT_CAM_OFFSET = new Transform3d(new Translation3d(-.301, -.261, 0.15), // 3
-        new Rotation3d(Units.degreesToRadians(0.5), Units.degreesToRadians(-22.8),
-            Units.degreesToRadians(273)));
+    public static final Transform3d BACK_CAM_OFFSET =
+        new Transform3d(
+            new Translation3d(-.3425, .267, .19), // 1
+            new Rotation3d(
+                Units.degreesToRadians(0.5),
+                Units.degreesToRadians(-24.5),
+                Units.degreesToRadians(180)));
+    public static final Transform3d LEFT_CAM_OFFSET =
+        new Transform3d(
+            new Translation3d(-.244, .2678, 0.022), // 2
+            new Rotation3d(
+                Units.degreesToRadians(-0.6),
+                Units.degreesToRadians(-25.2),
+                Units.degreesToRadians(91.0)));
+    public static final Transform3d RIGHT_CAM_OFFSET =
+        new Transform3d(
+            new Translation3d(-.301, -.261, 0.15), // 3
+            new Rotation3d(
+                Units.degreesToRadians(0.5),
+                Units.degreesToRadians(-22.8),
+                Units.degreesToRadians(273)));
 
-    private final static AprilTagFieldLayout TAG_LAYOUT = AprilTagFieldLayout
-        .loadField(AprilTagFields.k2026RebuiltAndymark);
+    private static final Field TAG_LAYOUT =
+        Field.loadField(Fields.FRC_2026_REBUILT_ANDY_MARK);
 
-    /* All the contraints for whether we trust/don't trust a set of data*/
-    private final static double MAXIMUM_X_POSE = TAG_LAYOUT.getFieldLength();
-    private final static double MAXIMUM_Y_POSE = TAG_LAYOUT.getFieldWidth();
-    private final static double APRILTAG_LIMIT_METERS = 6.7;
-    private final static double APRILTAG_LIMIT_METERS_AUTO = 1.0;
-    private final static double APRILTAG_CLOSE_LIMIT_METERS = 0.0;
-    private final static double MAXIMUM_AMBIGUITY = 0.20;
-    private final static int[] BLACKLISTED_TAG_ID_LIST = {};
-    private final static int MINIMUM_ACCEPTED_TAGS = 1;
+    // Field bounds, tag distances in meters, and ambiguity thresholds for accepting a pose.
+    private static final double MAXIMUM_X_POSE = TAG_LAYOUT.getFieldLength();
+    private static final double MAXIMUM_Y_POSE = TAG_LAYOUT.getFieldWidth();
+    private static final double APRILTAG_LIMIT_METERS = 6.7;
+    private static final double APRILTAG_LIMIT_METERS_AUTO = 1.0;
+    private static final double APRILTAG_CLOSE_LIMIT_METERS = 0.0;
+    private static final double MAXIMUM_AMBIGUITY = 0.20;
+    private static final int[] BLACKLISTED_TAG_ID_LIST = {};
+    private static final int MINIMUM_ACCEPTED_TAGS = 1;
 
     /*
      * Standard Deviation constants, tells the robot how much to trust this data
      */
-    private final static Matrix<N3, N1> LOW_SD = VecBuilder.fill(
-      0.00001, 0.00001, Units.degreesToRadians(0.00001)); // Units of meters and radians
-    private final static Matrix<N3, N1> HIGH_SD = VecBuilder.fill(
-      0.9, 0.9, Units.degreesToRadians(0.9)); // Units of meters and radians
+    private static final Matrix<N3, N1> LOW_SD =
+        VecBuilder.fill(
+            0.00001, 0.00001, Units.degreesToRadians(0.00001)); // Units of meters and radians
+    private static final Matrix<N3, N1> HIGH_SD =
+        VecBuilder.fill(0.9, 0.9, Units.degreesToRadians(0.9)); // Units of meters and radians
 
-    /**
-     * If there is ever a field fault, where a certain alliance ay be off by a certain amount, these offsets fix that
-     */
-    public static final Transform2d ODOMETRY_BLUE_OFFSET = new Transform2d(Inches.of(0.0).magnitude(),
-        Inches.of(0.0).magnitude(), new Rotation2d());
-    public static final Transform2d ODOMETRY_RED_OFFSET = new Transform2d(Inches.of(0.0).magnitude(),
-        Inches.of(0.0).magnitude(), new Rotation2d());
+    /** Configured alliance-specific pose offsets for field calibration. */
+    public static final Transform2d ODOMETRY_BLUE_OFFSET =
+        new Transform2d(Inches.of(0.0).magnitude(), Inches.of(0.0).magnitude(), new Rotation2d());
+
+    public static final Transform2d ODOMETRY_RED_OFFSET =
+        new Transform2d(Inches.of(0.0).magnitude(), Inches.of(0.0).magnitude(), new Rotation2d());
   }
 
   /**
-   *  Contains all the camera values published manally by us to network tables rather than via {@link Sendable}
+   * Structured pose and reliability topics published separately from Sendable dashboard properties.
    */
   private final NetworkTable cameraStateTable;
+
   private final StructPublisher<Pose3d> cameraPose;
   private final StructArrayPublisher<Pose3d> targetsPose;
   private final BooleanPublisher cameraReliable;
 
-  /**
-   * Holds all the possible invalid cases for Vision
-   * 
-   *<p><> OUT_OF_FIELD: When the camera says the robot is outside of the field
-   *<p> BLACKLISTED: A Blacklisted tag was included in the calculated pose
-   *<p> TAG_DISTANCE: A tag is too close or far for reliable values
-   *<p> AMBIGUITY: A camera is only picking up one tag, and the ambiguity is too high
-   *<p> NO_TARGETS: No targets are inside the latest camera result
-   */
+  /** Rejection categories counted for camera diagnostics. */
   private enum PoseInvalidCause {
     OUT_OF_FIELD,
     BLACKLISTED,
@@ -154,19 +158,19 @@ public class WarriorCamera implements Sendable {
     NO_TARGETS
   }
 
-  /**A unique data type, one that has a number correlated to each unique case in {@link PoseInvalidCause} */
+  /** Running counts by rejection category; published during the next refresh. */
   private EnumMap<PoseInvalidCause, Integer> invalidCounter = new EnumMap<>(PoseInvalidCause.class);
 
+  /** Creates the named camera using its measured robot-to-camera transform. */
   public WarriorCamera(String cameraName, Transform3d offsets) {
     camera = new PhotonCamera(cameraName);
 
-    /*Initialize all data logging, publishing data mans it is sent to NetworkTables */
+    // Keep diagnostics under a separate NetworkTables namespace for each camera.
     cameraStateTable = inst.getTable(camera.getName() + "CameraState");
     cameraPose = cameraStateTable.getStructTopic("Pose", Pose3d.struct).publish();
     targetsPose = cameraStateTable.getStructArrayTopic("Targets Pose", Pose3d.struct).publish();
     cameraReliable = cameraStateTable.getBooleanTopic("Reliable").publish();
 
-    /*Adds all of the unique cases in PoseInvalidCause and sets their values to 0 */
     for (PoseInvalidCause cause : PoseInvalidCause.values()) {
       invalidCounter.put(cause, 0);
     }
@@ -182,26 +186,17 @@ public class WarriorCamera implements Sendable {
     cameraSim.enableProcessedStream(true);
     cameraSim.enableDrawWireframe(true);
 
-    /*Pose estimators allow raw camera data to turn into usable Pose data */
-    poseEstimator = new PhotonPoseEstimator(
-        CameraConstants.TAG_LAYOUT, offsets);
+    // Combine known field tag positions with the camera's mounting transform.
+    poseEstimator = new PhotonPoseEstimator(CameraConstants.TAG_LAYOUT, offsets);
 
-    /*Refresh all the data for the first time, ensures everything gets set */
     refreshData();
-    
-    /*This section is more logging, these lines add WarriorCamera to SmartDashboard and Sendable
-     * note the usage of the term this, which allows all sendable values in the class to be enclosed within this new tab
-     */
-    SendableRegistry.add(this, camera.getName());
-    SmartDashboard.putData(this);
 
+    Dashboard.publish(camera.getName(), this);
   }
 
   /**
-   * Refreshes all the data for the cameras
-   * Should only be called once per robot cycle (we call this in another method inside {@link CommandSwerveDrivetrain})
-   * When certain camera values are {@link Optional}, always ensure that there is a check using isEmpty(),
-   * otherwise you can get null pointers
+   * Consumes unread frames and estimates the newest pose. Call once per robot cycle. With no new
+   * frame, the previously cached result and pose remain available.
    */
   public final void refreshData() {
     cameraResult = camera.getAllUnreadResults();
@@ -210,12 +205,11 @@ public class WarriorCamera implements Sendable {
       cameraEstimatedPose = poseEstimator.estimateCoprocMultiTagPose(latestCameraResult);
       if (!cameraEstimatedPose.isEmpty()) {
         cameraPose2d = cameraEstimatedPose.get().estimatedPose.toPose2d();
-        //Adds the pose to NetworkTables
+        // Adds the pose to NetworkTables
         cameraPose.accept(cameraEstimatedPose.get().estimatedPose);
         setTargetsPoseList();
       }
     }
-    //chaneg the values to the error logging
     refreshInvalid();
   }
 
@@ -223,12 +217,14 @@ public class WarriorCamera implements Sendable {
     return latestCameraResult.hasTargets();
   }
 
+  /** Checks for blacklisted tag IDs and records each match; this does not test pose ambiguity. */
   public boolean isAmbiguousTags() {
     boolean containsAmbiguous = false;
     if (latestCameraResult.hasTargets()) {
       for (int c = 0; c < latestCameraResult.getTargets().size(); c++) {
         for (int i = 0; i < CameraConstants.BLACKLISTED_TAG_ID_LIST.length; i++) {
-          if (latestCameraResult.getTargets().get(c).fiducialId == CameraConstants.BLACKLISTED_TAG_ID_LIST[i]) {
+          if (latestCameraResult.getTargets().get(c).fiducialId
+              == CameraConstants.BLACKLISTED_TAG_ID_LIST[i]) {
             containsAmbiguous = true;
             recordInvalid(PoseInvalidCause.BLACKLISTED);
           }
@@ -242,7 +238,12 @@ public class WarriorCamera implements Sendable {
   private Distance getCameraDistance(Translation2d targetTranslation) {
     if (cameraEstimatedPose.isPresent()) {
       return Meters.of(
-          cameraEstimatedPose.get().estimatedPose.toPose2d().getTranslation().getDistance(targetTranslation));
+          cameraEstimatedPose
+              .get()
+              .estimatedPose
+              .toPose2d()
+              .getTranslation()
+              .getDistance(targetTranslation));
     } else {
       return Meters.of(cameraPose2d.getTranslation().getDistance(targetTranslation));
     }
@@ -260,14 +261,16 @@ public class WarriorCamera implements Sendable {
     return standardDeviation;
   }
 
+  /** Returns the cached frame's FPGA timestamp in seconds for latency-aware odometry. */
   public double getTimer() {
     return latestCameraResult.getTimestampSeconds();
   }
 
-  public AprilTagFieldLayout getTagFieldLayout() {
+  public Field getTagFieldLayout() {
     return CameraConstants.TAG_LAYOUT;
   }
 
+  /** Returns the best target's ID; callers must first check hasTarget(). */
   public int getBestTagId() {
     return latestCameraResult.getBestTarget().fiducialId;
   }
@@ -283,19 +286,19 @@ public class WarriorCamera implements Sendable {
     return 1.0;
   }
 
-  // public double get
-
+  /** Returns best-target pitch in degrees; callers must first check hasTarget(). */
   public double getPitch() {
     return latestCameraResult.getBestTarget().getPitch();
   }
 
+  /** Returns best-target yaw in degrees; callers must first check hasTarget(). */
   public double getYaw() {
     return latestCameraResult.getBestTarget().getYaw();
   }
 
   public int getNumberOfTags() {
-    if(!cameraEstimatedPose.isEmpty()) {
-    return cameraEstimatedPose.get().targetsUsed.size();
+    if (!cameraEstimatedPose.isEmpty()) {
+      return cameraEstimatedPose.get().targetsUsed.size();
     } else {
       return 0;
     }
@@ -305,43 +308,33 @@ public class WarriorCamera implements Sendable {
     return latestCameraResult;
   }
 
-  /**In an effort to track what targets we are viewing, we use this method.
-   * This is an efficient but confusing way to do this,
-   * the same result could be accomplished using if statements and for loops. 
-   * Once the method finds all targets, they are added to NetworkTables
-   */
-  public void setTargetsPoseList(){
+  /** Publishes known field poses for visible tags, omitting IDs absent from the field layout. */
+  public void setTargetsPoseList() {
     List<PhotonTrackedTarget> targets = latestCameraResult.getTargets();
-    /*
-     * There is an array poses which is taking data from a map of targets.
-     * we use a placeholder variable target to cycle through all unique tags on the field,
-     * if a certain tag has no value in our poses, it is null, so we filter out all values with null
-     * by using another placeholder variable p to cycle throgh all the poses
-     * after getting the list of real poses, we send it to NetworkTables
-     */
-    Pose3d[] poses = targets.stream()
-        .map(target -> CameraConstants.TAG_LAYOUT
-          .getTagPose(target.getFiducialId())
-          .orElse(null))
-        .filter(p -> p != null)
-        .toArray(Pose3d[]::new);
-    //Publish target poses
+    Pose3d[] poses =
+        targets.stream()
+            .map(
+                target ->
+                    CameraConstants.TAG_LAYOUT.getTagPose(target.getFiducialId()).orElse(null))
+            .filter(p -> p != null)
+            .toArray(Pose3d[]::new);
+    // Publish target poses
     targetsPose.set(poses);
-  
-}
+  }
+
   /**
-   * Using constants created above, we check the data from the camera, and determine its validity
-   * @return true if  the pose is valid <p> false if the pose is not
+   * Validates the cached pose against connection, field bounds, and tag-quality checks.
+   *
+   * @param secondRun true to reuse the current frame instead of consuming unread results again
+   * @return whether the pose passes the configured checks
    */
   public boolean filterOdometry(boolean secondRun) {
-    //ensure data is fresh, this is the only place where refreshData is called each cycle (besides initialization)
     if (!secondRun) {
-    refreshData();
+      refreshData();
     }
 
     /*Is the camera connected, or do we have a pose? */
     if (!camera.isConnected()) {
-      // cameraReliable is a value we pulish to NetworkTables to know if we are getting valid poses or not
       cameraReliable.set(false);
       return false;
     } else if (!(cameraEstimatedPose.isPresent())) {
@@ -350,10 +343,10 @@ public class WarriorCamera implements Sendable {
     }
 
     /*Pose in Field? */
-    if (cameraPose2d.getX() > CameraConstants.MAXIMUM_X_POSE ||
-        cameraPose2d.getY() > CameraConstants.MAXIMUM_Y_POSE ||
-        cameraPose2d.getX() < 0 ||
-        cameraPose2d.getY() < 0) {
+    if (cameraPose2d.getX() > CameraConstants.MAXIMUM_X_POSE
+        || cameraPose2d.getY() > CameraConstants.MAXIMUM_Y_POSE
+        || cameraPose2d.getX() < 0
+        || cameraPose2d.getY() < 0) {
       recordInvalid(PoseInvalidCause.OUT_OF_FIELD);
       cameraReliable.set(false);
       return false;
@@ -363,28 +356,31 @@ public class WarriorCamera implements Sendable {
     if (isTagReliable() && getNumberOfTags() >= CameraConstants.MINIMUM_ACCEPTED_TAGS) {
       standardDeviation = CameraConstants.LOW_SD;
     } else {
-      //Invalid data in terms of concistency is not thrown out, it is rather trusted far less
+      // Rejected poses retain the high-noise diagnostic setting but are not fused by the
+      // drivetrain.
       standardDeviation = CameraConstants.HIGH_SD;
       cameraReliable.set(false);
       return false;
     }
 
     /*Apply alliance offsets if there are any */
-    Optional<DriverStation.Alliance> allianceColor = DriverStation.getAlliance();
+    Optional<Alliance> allianceColor = org.wpilib.driverstation.MatchState.getAlliance();
     if (allianceColor.isPresent()) {
-      if (allianceColor.get().equals(Alliance.Red)) {
+      if (allianceColor.get().equals(Alliance.RED)) {
         cameraPose2d.plus(CameraConstants.ODOMETRY_RED_OFFSET);
       } else {
         cameraPose2d.plus(CameraConstants.ODOMETRY_BLUE_OFFSET);
       }
     }
 
-    /*If the code reahes this point, the pose is valid */
     cameraReliable.set(true);
     return true;
   }
+
   /**
-   * Checks the distance from robot to tags and ambiguity of the tags to determine trust level of data
+   * Checks the distance from robot to tags and ambiguity of the tags to determine trust level of
+   * data
+   *
    * @return true if all conditions pass, otherwise false
    */
   public boolean isTagReliable() {
@@ -393,42 +389,46 @@ public class WarriorCamera implements Sendable {
       PhotonTrackedTarget bestTarget = latestCameraResult.getBestTarget();
       int targetID = bestTarget.getFiducialId();
       Translation2d cameraTranslation2d = cameraPose2d.getTranslation();
-      Translation2d targetTranslation2d = CameraConstants.TAG_LAYOUT.getTagPose(targetID).get().getTranslation()
-          .toTranslation2d();
+      Translation2d targetTranslation2d =
+          CameraConstants.TAG_LAYOUT.getTagPose(targetID).get().getTranslation().toTranslation2d();
 
       // if (DriverStation.isAutonomous()) {
-      //   if (cameraTranslation2d.getDistance(targetTranslation2d) < CameraConstants.APRILTAG_LIMIT_METERS_AUTO &&
-      //       bestTarget.getPoseAmbiguity() < CameraConstants.MAXIMUM_AMBIGUITY && !isAmbiguousTags()) {
+      //   if (cameraTranslation2d.getDistance(targetTranslation2d) <
+      // CameraConstants.APRILTAG_LIMIT_METERS_AUTO &&
+      //       bestTarget.getPoseAmbiguity() < CameraConstants.MAXIMUM_AMBIGUITY &&
+      // !isAmbiguousTags()) {
       //     return true;
       //   } else {
       //     return false;
       //   }
       // }
 
-      /*
-       * Rather than repeat the same code twice, make an instance variable (invalidCause) 
-       * to allow us to check for specific conditions and help debug
-       */
+      // Record the first rejection reason selected by these checks.
       PoseInvalidCause invalidCause = null;
-      if (cameraTranslation2d.getDistance(targetTranslation2d) > CameraConstants.APRILTAG_LIMIT_METERS
-          || cameraTranslation2d.getDistance(targetTranslation2d) < CameraConstants.APRILTAG_CLOSE_LIMIT_METERS) {
-            invalidCause = PoseInvalidCause.TAG_DISTANCE;
-          }
-       else if (bestTarget.getPoseAmbiguity() > CameraConstants.MAXIMUM_AMBIGUITY && isAmbiguousTags()) {
+      if (cameraTranslation2d.getDistance(targetTranslation2d)
+              > CameraConstants.APRILTAG_LIMIT_METERS
+          || cameraTranslation2d.getDistance(targetTranslation2d)
+              < CameraConstants.APRILTAG_CLOSE_LIMIT_METERS) {
+        invalidCause = PoseInvalidCause.TAG_DISTANCE;
+      } else if (bestTarget.getPoseAmbiguity() > CameraConstants.MAXIMUM_AMBIGUITY
+          && isAmbiguousTags()) {
         invalidCause = PoseInvalidCause.AMBIGUITY;
-      } 
-      
+      }
+
       // invalidCause being null implies there are no errors
       if (invalidCause != null) {
         cameraReliable.set(false);
         recordInvalid(invalidCause);
         return false;
       }
-        cameraReliable.set(true);
-        return true;
-      // if (cameraTranslation2d.getDistance(targetTranslation2d) < CameraConstants.APRILTAG_LIMIT_METERS
-      //     && cameraTranslation2d.getDistance(targetTranslation2d) > CameraConstants.APRILTAG_CLOSE_LIMIT_METERS
-      //     && bestTarget.getPoseAmbiguity() < CameraConstants.MAXIMUM_AMBIGUITY && !isAmbiguousTags()) {
+      cameraReliable.set(true);
+      return true;
+      // if (cameraTranslation2d.getDistance(targetTranslation2d) <
+      // CameraConstants.APRILTAG_LIMIT_METERS
+      //     && cameraTranslation2d.getDistance(targetTranslation2d) >
+      // CameraConstants.APRILTAG_CLOSE_LIMIT_METERS
+      //     && bestTarget.getPoseAmbiguity() < CameraConstants.MAXIMUM_AMBIGUITY &&
+      // !isAmbiguousTags()) {
       //   cameraReliable.set(true);
       //   return true;
       // } else {
@@ -443,15 +443,18 @@ public class WarriorCamera implements Sendable {
   }
 
   /**
-   * Incrememnts the value for a specific camera error when called
-   * @param cause - The specific error that was triggered
+   * Increments the diagnostic counter for the reported rejection category.
+   *
+   * @param cause category reported by the acceptance checks
    */
   private void recordInvalid(PoseInvalidCause cause) {
     invalidCounter.put(cause, invalidCounter.get(cause) + 1);
   }
 
-  /** Update network tables with the new values of the errors logged, 
-   * cycling through each unique cause inside the enum */
+  /**
+   * Update network tables with the new values of the errors logged, cycling through each unique
+   * cause inside the enum
+   */
   private void refreshInvalid() {
     for (PoseInvalidCause cause : PoseInvalidCause.values()) {
       cameraStateTable.getEntry(cause.name()).setInteger(invalidCounter.get(cause));
@@ -459,10 +462,8 @@ public class WarriorCamera implements Sendable {
   }
 
   @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType(camera.getName());
-    builder.addBooleanProperty(camera.getName() + " has 2 targets?",
-     () -> latestCameraResult.getTargets().size() >= 2, null);
-    builder.addDoubleProperty(camera.getName() + " Ambiguity", () -> getAmbiguity(), null);
+  public void logTo(TelemetryTable table) {
+    table.log(camera.getName() + " has 2 targets?", latestCameraResult.getTargets().size() >= 2);
+    table.log(camera.getName() + " Ambiguity", getAmbiguity());
   }
 }

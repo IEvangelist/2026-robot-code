@@ -4,10 +4,10 @@
 
 package frc.robot.command.autoCommands;
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.ParallelDeadlineGroup;
+import org.wpilib.command2.SequentialCommandGroup;
+import org.wpilib.command2.WaitCommand;
 import frc.robot.Constants.IntakePositions;
 import frc.robot.Constants.TrajectoryConstants;
 import frc.robot.command.TargetCommand;
@@ -17,26 +17,29 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TransitionSubsystem;
 
-// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
-// information, see:
-// https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+/** Delayed red depot routine with collection trips and stationary timed shooting windows. */
 public class RedDepotCommand extends SequentialCommandGroup {
-  /** Creates a new RedDepotCommand. */
   private CommandSwerveDrivetrain driveSubsystem;
   private IntakeSubsystem intakeSubsystem;
   private TransitionSubsystem transitionSubsystem;
   private ShooterSubsystem shooterSubsystem;
   private ClimbSubsystem climbSubsystem;
 
-  public RedDepotCommand(IntakeSubsystem intake, ClimbSubsystem climb, CommandSwerveDrivetrain drive,
-      ShooterSubsystem shooter, TransitionSubsystem transition) {
+  public RedDepotCommand(
+      IntakeSubsystem intake,
+      ClimbSubsystem climb,
+      CommandSwerveDrivetrain drive,
+      ShooterSubsystem shooter,
+      TransitionSubsystem transition) {
 
     addCommands(
         new WaitCommand(2),
         new InstantCommand(() -> intake.intakeOut()),
         drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RED_DEPOT_SCORE),
+        // The wait deadline ends targeting and the continuous stationary drive request.
         new ParallelDeadlineGroup(
             new WaitCommand(3),
+            // This continuous hold prevents the following targeting command from starting.
             drive.stopAlign(),
             new TargetCommand(intake, transition, shooter, () -> drive.getState())),
         new InstantCommand(() -> shooter.setRPM(0)),
@@ -49,10 +52,9 @@ public class RedDepotCommand extends SequentialCommandGroup {
             drive.stopAlign(),
             new TargetCommand(intake, transition, shooter, () -> drive.getState())),
         drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RED_DEPOT_OFFSET),
-        drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RED_DEPOT), 
+        drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RED_DEPOT),
         drive.profiledAutonAlignCommand(() -> TrajectoryConstants.RED_DEPOT_OFFSET),
         drive.stopAlign(),
-        new TargetCommand(intake, transition, shooter, () -> drive.getState())
-        );
+        new TargetCommand(intake, transition, shooter, () -> drive.getState()));
   }
 }
